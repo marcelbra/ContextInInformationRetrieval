@@ -6,6 +6,7 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 from typing import Dict, List, Tuple
 from torch import Tensor
+from context_concepts import contexts
 from mpl_toolkits.mplot3d import Axes3D
 
 def get_corpus_from_links(urls: List[str]) -> Tuple[List[str], Tensor]:
