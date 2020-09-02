@@ -4,6 +4,8 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
+from typing import Dict, List
+from torch import Tensor
 from mpl_toolkits.mplot3d import Axes3D
 
 urls = ["https://www.nytimes.com/2020/08/06/us/crayola-masks-kids.html",
@@ -30,14 +32,18 @@ for url in urls:
         continue
     corpus.append(article.text)
 corpus_embeddings = model.encode(corpus, convert_to_tensor=True)
+query_embedding = model.encode("should my child wear a face mask", convert_to_tensor=True)
 
-# query corpus with query
-top_k = 5
-query = "should my child wear a face mask"
-query_embedding = model.encode(query, convert_to_tensor=True)
-cos_scores = util.pytorch_cos_sim(query_embedding, corpus_embeddings)[0]
-cos_scores = cos_scores.cpu()
-top_results = np.argpartition(-cos_scores, range(top_k))[0:top_k]
+
+def search(corpus_embeddings: Tensor,
+           query_embedding:Tensor,
+           top_k: int=5
+           ) -> List[int]:
+    cos_scores = util.pytorch_cos_sim(query_embedding, corpus_embeddings)[0]
+    cos_scores = cos_scores.cpu()
+    top_results = np.argpartition(-cos_scores, range(top_k))[0:top_k]
+
+search(corpus_embeddings, query_embedding, 5)
 
 # query corpus with the topic
 school_text = "A primary school, junior school, elementary school or grade school is a school for children from about four to eleven years old, in which they receive primary or elementary education. It can refer to both the physical structure (buildings) and the organisation. Typically it comes after preschool, and before secondary school."
