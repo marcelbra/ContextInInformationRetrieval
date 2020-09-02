@@ -93,3 +93,9 @@ for i in range(12):
         ax.scatter(x[i], y[i], z[i], c='r', marker='o')
 plt.show()
 
+title = "Social distancing"
+text = "Social distancing (also known as physical distancing) includes infection control actions intended to slow the spread of disease by minimising close contact between individuals. Methods include quarantines; travel restrictions; and the closing of schools, workplaces, stadiums, theatres, or shopping centres. Individuals may apply social distancing methods by staying at home, limiting travel, avoiding crowded areas, using no-contact greetings, and physically distancing themselves from others. Many governments are now mandating or recommending social distancing in regions affected by the outbreak. Non-cooperation with distancing measures in some areas has contributed to the further spread of the pandemic"
+emb1 = model.encode(title)
+emb2 = model.encode(text)
+cos_scores = util.pytorch_cos_sim(emb1, emb2)[0]
+s = 0
