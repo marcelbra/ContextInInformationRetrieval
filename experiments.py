@@ -20,7 +20,7 @@ import numpy as np
 #     "https://www.nytimes.com/2020/05/27/travel/is-flying-safe-coronavirus.html",
 #     "https://www.nytimes.com/2020/08/18/business/airport-remodeling-coronavirus-safety.html"
 #         ]
-
+"""
 query_airport = "aerosol viral transmission on airplane"
 query_school = "aerosol viral transmission in school"
 query_office = "aerosol viral transmission in office"
@@ -84,4 +84,28 @@ for i in range(len(context_topics) + 5):
 for i, txt in enumerate(context_topics + ["searcher", "airplane query", "school query", "office query", "new searcher"]):
     ax.annotate(txt, (x[i] + 0.25, y[i] + 0.25))
 
+"""
+
+"""
+Plot mitigation measures and impacts
+"""
+
+measures = ["hand washing", "face masks", "social distance", "air filtration", "surface cleaning"] # health
+impacts = ["stock market crash", "recession", "financial market", "aviation industry", "food industry", "meat industry", "restaurant industry", "retail", "tourism", # economic
+           "health",
+           "culture", # culture
+           "society",
+           "politics"]
+emb_measures = get_embeddings_from_corpus(measures)
+emb_impacts = get_embeddings_from_corpus(impacts)
+
+pc = PCA(n_components=2).fit_transform(torch.cat((emb_measures, emb_impacts), dim=0).cpu())
+x, y = pc[:,0], pc[:,1]
+fig, ax = plt.subplots()
+for i, measure in enumerate(measures):
+    ax.scatter(x[i], y[i], c='r', marker='o')
+    ax.annotate(measure, (x[i] + 0.25, y[i] + 0.25))
+for j, impact in enumerate(impacts):
+    ax.scatter(x[len(measures) + j], y[len(measures) + j], c='b', marker='o')
+    ax.annotate(impact, (x[len(measures) + j] + 0.25, y[len(measures) + j] + 0.25))
 plt.show()
