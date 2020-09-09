@@ -90,22 +90,31 @@ for i, txt in enumerate(context_topics + ["searcher", "airplane query", "school 
 Plot mitigation measures and impacts
 """
 
-measures = ["hand washing", "face masks", "social distance", "air filtration", "surface cleaning"] # health
-impacts = ["stock market crash", "recession", "financial market", "aviation industry", "food industry", "meat industry", "restaurant industry", "retail", "tourism", # economic
-           "health",
-           "culture", # culture
-           "society",
-           "politics"]
+measures = ["hand washing", "face masks", "social distance", "air filtration", "surface cleaning"]
+impact_economic = ["stock market crash", "recession", "financial market", "aviation industry", "food industry", "meat industry", "restaurant industry", "retail", "tourism"]
+impact_culture = ["cinema", "education", "sports", "television", "arts", "music", "fashion", "performing arts", "video games industry"]
+impact_society = ["religion", "gender", "human rights", "healthcare workers", "strikes", "social", "mental health", "racism", "public transport"]
+# impact_politics = ["european union", "internation relations", "legislation", "national responses", "protests", "United Nations response", "World Healt Organization response"]
+impacts = impact_economic + impact_culture + impact_society + impact_society# + impact_politics
 emb_measures = get_embeddings_from_corpus(measures)
 emb_impacts = get_embeddings_from_corpus(impacts)
 
-pc = PCA(n_components=2).fit_transform(torch.cat((emb_measures, emb_impacts), dim=0).cpu())
+# pc = PCA(n_components=2).fit_transform(torch.cat((emb_measures, emb_impacts), dim=0).cpu())
+pc = PCA(n_components=2).fit_transform(emb_measures.cpu())
 x, y = pc[:,0], pc[:,1]
 fig, ax = plt.subplots()
-for i, measure in enumerate(measures):
-    ax.scatter(x[i], y[i], c='r', marker='o')
-    ax.annotate(measure, (x[i] + 0.25, y[i] + 0.25))
-for j, impact in enumerate(impacts):
-    ax.scatter(x[len(measures) + j], y[len(measures) + j], c='b', marker='o')
-    ax.annotate(impact, (x[len(measures) + j] + 0.25, y[len(measures) + j] + 0.25))
+for i, action in enumerate(measures):#+impacts):
+    if action in measures:
+        color = "r"
+    elif action in impact_economic:
+        color = "b"
+    elif action in impact_culture:
+        color = "g"
+    elif action in impact_society:
+        color = "y"
+    # elif action in impact_politics:
+    #     color = "black"
+    ax.scatter(x[i], y[i], c=color, marker='o')
+    ax.annotate(action, (x[i] - 0.5, y[i] + 0.35))
 plt.show()
+

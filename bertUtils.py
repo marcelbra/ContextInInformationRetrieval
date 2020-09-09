@@ -9,9 +9,9 @@ from context_concepts import contexts
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
-def get_corpus_from_links(urls: List[str]) -> Tuple[List[str], Tensor]:
+def get_corpus_from_links(urls: List[str]) -> Tuple[List[str], List[str], Tensor]:
     # create and embed corpus
-    corpus = []
+    corpus, titles = [], []
     for url in urls:
         article = Article(url)
         try:
@@ -20,8 +20,9 @@ def get_corpus_from_links(urls: List[str]) -> Tuple[List[str], Tensor]:
         except:
             continue
         corpus.append(article.text)
+        titles.append(article.title)
     corpus_embeddings = model.encode(corpus, convert_to_tensor=True)
-    return corpus, corpus_embeddings
+    return titles, corpus, corpus_embeddings
 
 def filter(corpus_embeddings: Tensor,
            query_embedding: Tensor,
@@ -100,7 +101,6 @@ semantic space only minor differences are responsible for worse or better result
 """
 # link collection
 urls = ["https://www.nytimes.com/2020/08/06/us/crayola-masks-kids.html",
-		"https://www.nytimes.com/aponline/2020/08/25/business/ap-eu-virus-outbreak-britain.html",
 		"https://www.nytimes.com/article/face-shield-mask-california-coronavirus.html",
 		"https://www.nytimes.com/2020/07/27/health/coronavirus-mask-protection.html",
 		"https://www.nytimes.com/interactive/2020/health/coronavirus-best-face-masks.html",
@@ -110,11 +110,11 @@ urls = ["https://www.nytimes.com/2020/08/06/us/crayola-masks-kids.html",
 		"https://www.nytimes.com/2020/06/23/well/family/children-masks-coronavirus.html",
 		"https://www.nytimes.com/2020/04/09/parenting/coronavirus-kids-masks.html"]
 # filter corpus with query and retrieve top k indices
-query_embedding = model.encode("should my child wear a face mask", convert_to_tensor=True)
-corpus, corpus_embeddings = get_corpus_from_links(urls)
+query_embedding = model.encode("should my child wear a face mask at school", convert_to_tensor=True)
+titles, corpus, corpus_embeddings = get_corpus_from_links(urls)
 top_indices = filter(corpus_embeddings, query_embedding, 5)
 # query corpus with the topic
-school_text = "child"#A primary school, junior school, elementary school or grade school is a school for children from about four to eleven years old, in which they receive primary or elementary education. It can refer to both the physical structure (buildings) and the organisation. Typically it comes after preschool, and before secondary school."
+school_text = "primary school"#A primary school, junior school, elementary school or grade school is a school for children from about four to eleven years old, in which they receive primary or elementary education. It can refer to both the physical structure (buildings) and the organisation. Typically it comes after preschool, and before secondary school."
 school_embedding = model.encode(school_text, convert_to_tensor=True)
 top_indices = post_filter(corpus_embeddings, school_embedding, top_indices)
 # visualisation
