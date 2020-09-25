@@ -89,7 +89,7 @@ for i, txt in enumerate(context_topics + ["searcher", "airplane query", "school 
 """
 Plot mitigation measures and impacts
 """
-
+"""
 measures = ["hand washing", "face masks", "social distance", "air filtration", "surface cleaning"]
 impact_economic = ["stock market crash", "recession", "financial market", "aviation industry", "food industry", "meat industry", "restaurant industry", "retail", "tourism"]
 impact_culture = ["cinema", "education", "sports", "television", "arts", "music", "fashion", "performing arts", "video games industry"]
@@ -98,9 +98,9 @@ impact_society = ["religion", "gender", "human rights", "healthcare workers", "s
 impacts = impact_economic + impact_culture + impact_society + impact_society# + impact_politics
 emb_measures = get_embeddings_from_corpus(measures)
 emb_impacts = get_embeddings_from_corpus(impacts)
-
+searcher = torch.mean(emb_measures, dim=0, keepdim=True)
 # pc = PCA(n_components=2).fit_transform(torch.cat((emb_measures, emb_impacts), dim=0).cpu())
-pc = PCA(n_components=2).fit_transform(emb_measures.cpu())
+pc = PCA(n_components=2).fit_transform(torch.cat((emb_measures, searcher), dim=0).cpu().cpu())
 x, y = pc[:,0], pc[:,1]
 fig, ax = plt.subplots()
 for i, action in enumerate(measures):#+impacts):
@@ -116,5 +116,98 @@ for i, action in enumerate(measures):#+impacts):
     #     color = "black"
     ax.scatter(x[i], y[i], c=color, marker='o')
     ax.annotate(action, (x[i] - 0.5, y[i] + 0.35))
+ax.scatter(x[len(measures)], y[len(measures)], c='g', marker='o')
+ax.annotate("searcher", (x[len(measures)] - 0.5, y[len(measures)] + 0.35))
 plt.show()
 
+"""
+
+def geometric(number: int) -> float:
+    return (1/1.3)**number
+
+def step(searcher: Tensor,
+         top_indices: List[int],
+         emb_measures: Tensor,
+         counter: int
+         ) -> Tuple[Tensor, Tensor]:
+    """
+
+    :param searcher:
+    :param top_indices:
+    :param emb_measures:
+    :param counter:
+    :return:
+    """
+    topics = [emb_measures[filter(emb_measures, emb_corpus[index], 1)[0]].reshape(1,768) for index in top_indices]
+    searcher_history = searcher.clone()
+    for topic in topics:
+        direction = topic - searcher
+        distance = geometric(counter) / len(topics)
+        searcher = searcher + (direction * distance)
+        searcher_history = torch.cat((searcher_history, searcher), dim=0)
+    return searcher, searcher_history
+
+urls = ["https://www.nytimes.com/2020/06/02/realestate/virus-social-distancing-etiquette-rules.html",
+        "https://www.nytimes.com/2020/05/04/us/social-distancing-rules-coronavirus.html",
+        "https://www.nytimes.com/2020/03/16/smarter-living/coronavirus-social-distancing.html",
+        "https://www.nytimes.com/2020/06/18/nyregion/coronavirus-ny-social-distancing.html",
+        "https://www.nytimes.com/2020/03/18/world/clean-home-coronavirus.html",
+        "https://www.nytimes.com/2020/05/06/well/live/coronavirus-cleaning-cleaners-disinfectants-home.html",
+        "https://www.nytimes.com/guides/smarterliving/how-to-clean",
+        "https://www.nytimes.com/wirecutter/reviews/best-all-purpose-cleaner/",
+        "https://www.nytimes.com/2020/03/13/world/how-to-wash-your-hands-coronavirus.html",
+        "https://www.nytimes.com/2020/06/11/well/live/the-hand-washing-wars.html",
+        "https://www.nytimes.com/interactive/2020/04/15/burst/how-to-wash-your-hands.html",
+        "https://www.nytimes.com/2016/04/21/health/washing-hands.html",
+        "https://www.nytimes.com/wirecutter/reviews/best-cloth-face-masks/",
+        "https://www.nytimes.com/interactive/2020/07/17/upshot/coronavirus-face-mask-map.html",
+        "https://www.nytimes.com/article/face-shield-mask-california-coronavirus.html",
+        "https://www.nytimes.com/interactive/2020/08/10/nyregion/nyc-subway-coronavirus.html",
+        "https://www.nytimes.com/2020/03/04/opinion/coronavirus-buildings.html",
+        "https://www.nytimes.com/2020/07/27/health/coronavirus-mask-protection.html",
+        "https://www.nytimes.com/2020/07/06/health/coronavirus-airborne-aerosols.html",
+        "https://www.nytimes.com/2020/07/30/opinion/coronavirus-aerosols.html"]
+
+colors = ["#00FFCC", "#00FFCC", "#00FFCC", "#00FFCC", # social distancing
+          "#F7347A", "#F7347A", "#F7347A", "#F7347A", # surface cleaning
+          "#FFFF66", "#FFFF66", "#FFFF66", "#FFFF66", # washing hands
+          "#F08080", "#F08080", "#F08080", "#F08080", # face masks
+          "#990000", "#990000", "#990000", "#990000"] # air circulation
+
+# Embed context, corpus and place searcher
+measures = ["social distance", "surface cleaning", "hand washing", "face masks", "air filtration"]
+titles, corpus, emb_corpus = get_corpus_from_links(urls)
+emb_measures = get_embeddings_from_corpus(measures)
+searcher = torch.mean(emb_measures, dim=0, keepdim=True)
+
+# We assume the user is interested in hand washing
+query = "Is hand washing an effective measure against the virus?"
+emb_query = get_embeddings_from_corpus(query)
+top_indices = filter(emb_corpus, emb_query, 5)
+# the top indices are [8, 11, 4, 10, 5]
+# we can see that 8, 11, 10 are relevant and 4, 5 are not
+
+
+
+searcher, history = step(searcher, top_indices[:2], emb_measures, 1)
+searcher, history2 = step(searcher, top_indices[:2], emb_measures, 2)
+history2 = history2[1:]
+p = 0
+pc = PCA(n_components=2).fit_transform(torch.cat((emb_measures, emb_corpus, history, history2), dim=0).cpu())
+x, y = pc[:,0], pc[:,1]
+fig, ax = plt.subplots()
+for i in range(len(corpus) + len(measures) + history.size()[0] + history2.size()[0]):
+    if i < len(measures): # measures
+        ax.scatter(x[i], y[i], c=colors[i * (len(measures)-1)], marker='o')
+        ax.annotate(measures[i], (x[i] - 3.5, y[i] + 0.5))
+    elif i < len(measures) + len(corpus): # docs
+        ax.scatter(x[i], y[i], c=colors[i - len(measures)], marker='o')
+        name = str(i-len(measures)+1) if i-len(measures) >= 10 else " " + str(i-len(measures)+1)
+        ax.annotate(name, (x[i]-0.2, y[i]-0.2), fontsize=6)
+    else: # searcher
+        continue
+        ax.scatter(x[i], y[i], c='b', marker='o')
+        ax.annotate(str(p), (x[i] + 0.5, y[i] - 0.25 ))
+        p += 1
+plt.axis('off')
+plt.show()

@@ -7,9 +7,9 @@ import numpy as np
 
 model = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')#distilbert-base-nli-mean-tokens')
 
-def get_corpus_from_links(urls: List[str]) -> Tuple[List[str], Tensor]:
+def get_corpus_from_links(urls: List[str]) -> Tuple[List[str], List[str], Tensor]:
     # create and embed corpus
-    corpus = []
+    corpus, titles = [], []
     for url in urls:
         article = Article(url)
         try:
@@ -17,9 +17,10 @@ def get_corpus_from_links(urls: List[str]) -> Tuple[List[str], Tensor]:
             article.parse()
         except:
             continue
-        corpus.append(article.text)
+        corpus.append(filter_corona_words(article.text))
+        titles.append(filter_corona_words(article.title))
     corpus_embeddings = model.encode(corpus, convert_to_tensor=True)
-    return corpus, corpus_embeddings
+    return titles, corpus, corpus_embeddings
 
 def get_embeddings_from_corpus(corpus: Union[List[str], str]) -> Tensor:
     if isinstance(corpus, str):
@@ -27,7 +28,9 @@ def get_embeddings_from_corpus(corpus: Union[List[str], str]) -> Tensor:
     else:
         return model.encode(corpus, convert_to_tensor=True)
 
-
+def filter_corona_words(doc: str) -> str:
+    # doc = doc.replace("", "")
+    return doc
 
 def filter(corpus_embeddings: Tensor,
            query_embedding: Tensor,

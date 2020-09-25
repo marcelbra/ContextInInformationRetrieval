@@ -9,7 +9,8 @@ from context_concepts import contexts
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D
 
-def get_corpus_from_links(urls: List[str]) -> Tuple[List[str], List[str], Tensor]:
+def get_corpus_from_links(urls: List[str]
+                          ) -> Tuple[List[str], List[str], Tensor]:
     # create and embed corpus
     corpus, titles = [], []
     for url in urls:
@@ -132,8 +133,8 @@ for i in range(12):
         ax.scatter(x[i], y[i], z[i], c='b', marker='o')
     else:
         ax.scatter(x[i], y[i], z[i], c='r', marker='o')
-# plt.show()
-
+plt.show()
+s=0
 """
 Experiment 002
 
